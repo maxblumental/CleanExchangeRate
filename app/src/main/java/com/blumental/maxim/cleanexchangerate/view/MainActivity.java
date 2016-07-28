@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.blumental.maxim.cleanexchangerate.App;
 import com.blumental.maxim.cleanexchangerate.R;
 
-public class MainActivity extends AppCompatActivity implements MainView {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
