@@ -72,6 +72,18 @@ public class InputMoneyFragment extends Fragment implements InputMoneyView {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        presenter.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        presenter.onPause();
+        super.onPause();
+    }
+
+    @Override
     public void onDestroy() {
         presenter.onDestroy();
         super.onDestroy();
@@ -82,7 +94,10 @@ public class InputMoneyFragment extends Fragment implements InputMoneyView {
     public void switchToConvertedMoney(Bundle args) {
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
-        ConvertedMoneyFragment fragment = new ConvertedMoneyFragment();
+        Fragment fragment = fragmentManager.findFragmentByTag(ConvertedMoneyFragment.TAG);
+        if (fragment == null) {
+            fragment = new ConvertedMoneyFragment();
+        }
         fragment.setArguments(args);
 
         fragmentManager.beginTransaction()

@@ -8,6 +8,10 @@ public interface InputMoneyPresenter {
 
     void onCreate(InputMoneyView view);
 
+    void onResume();
+
+    void onPause();
+
     void onDestroy();
 
     void observeConvertButtonClicks(Observable<Void> observable);

@@ -16,6 +16,7 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.subjects.AsyncSubject;
 import rx.subscriptions.CompositeSubscription;
 
 public class InputMoneyPresenterImpl implements InputMoneyPresenter {
@@ -24,9 +25,7 @@ public class InputMoneyPresenterImpl implements InputMoneyPresenter {
 
     private CompositeSubscription compositeSubscription;
 
-    public InputMoneyPresenterImpl() {
-        compositeSubscription = new CompositeSubscription();
-    }
+    private AsyncSubject<Bundle> asyncSubject;
 
     @Override
     public void onCreate(InputMoneyView view) {
@@ -35,16 +34,29 @@ public class InputMoneyPresenterImpl implements InputMoneyPresenter {
     }
 
     @Override
-    public void onDestroy() {
+    public void onResume() {
+        compositeSubscription = new CompositeSubscription();
+
+        if (asyncSubject != null && asyncSubject.hasValue()) {
+            Subscriber<Bundle> subscriber = createConvertToAllCurrenciesSubscriber();
+            asyncSubject.subscribe(subscriber);
+        }
+    }
+
+    @Override
+    public void onPause() {
         compositeSubscription.unsubscribe();
+    }
+
+    @Override
+    public void onDestroy() {
         view = null;
     }
 
     @Override
     public void observeConvertButtonClicks(Observable<Void> observable) {
 
-        Subscription subscription = observable
-                .debounce(1, TimeUnit.SECONDS)
+        observable.debounce(1, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<Void>() {
                     @Override
@@ -52,8 +64,6 @@ public class InputMoneyPresenterImpl implements InputMoneyPresenter {
                         handleConvertButtonClick();
                     }
                 });
-
-        compositeSubscription.add(subscription);
     }
 
     private void handleConvertButtonClick() {
@@ -75,9 +85,14 @@ public class InputMoneyPresenterImpl implements InputMoneyPresenter {
         ConvertToAllCurrenciesInteractor interactor = ConvertToAllCurrenciesInteractor.create();
 
         Subscriber<Bundle> subscriber = createConvertToAllCurrenciesSubscriber();
-        Subscription subscription = interactor.run(money)
+
+        asyncSubject = AsyncSubject.create();
+
+        interactor.run(money)
                 .map(ConvertedMoneyToBundle.map())
-                .subscribe(subscriber);
+                .subscribe(asyncSubject);
+
+        Subscription subscription = asyncSubject.subscribe(subscriber);
 
         compositeSubscription.add(subscription);
     }
@@ -93,6 +108,7 @@ public class InputMoneyPresenterImpl implements InputMoneyPresenter {
         return new Subscriber<Bundle>() {
             @Override
             public void onCompleted() {
+                asyncSubject = null;
             }
 
             @Override

@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         fragmentManager.beginTransaction()
-                .add(R.id.mainFrame, new InputMoneyFragment(), InputMoneyFragment.TAG)
+                .replace(R.id.mainFrame, new InputMoneyFragment(), InputMoneyFragment.TAG)
                 .commit();
     }
 }
